@@ -33,7 +33,9 @@ class ProcessStatusNotifier:
 
     def __exit__(self, exc_type, exc_value, traceback):
         if exc_type:
-            self.notify('failed', payload={**self.payload, 'message': str(exc_value)})
+            payload = dict(self.payload)
+            payload['message'] = str(exc_value)
+            self.notify('failed', payload=payload)
         else:
             self.notify('finished')
 

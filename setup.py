@@ -1,7 +1,7 @@
 import re
 from setuptools import setup
 
-VERSION = '0.0.1'
+VERSION = '0.0.2'
 
 
 def pip_git_to_setuptools_git(url):
