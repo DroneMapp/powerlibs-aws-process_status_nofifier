@@ -1,3 +1,5 @@
+import os
+
 from cached_property import cached_property
 
 from powerlibs.aws.sqs.publisher import SQSPublisher
@@ -13,7 +15,8 @@ class ProcessStatusNotifier:
 
     @cached_property
     def notifier(self):
-        return SQSPublisher()
+        aws_region = os.environ.get('AWS_REGION_NAME') or os.environ.get('AWS_REGION')
+        return SQSPublisher(aws_region=aws_region)
 
     def _load_basic_topics(self, topics_format):
         stati = 'started', 'finished', 'failed'
