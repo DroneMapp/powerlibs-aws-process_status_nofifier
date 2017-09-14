@@ -15,8 +15,7 @@ class ProcessStatusNotifier:
 
     @cached_property
     def notifier(self):
-        aws_region = os.environ.get('AWS_REGION_NAME') or os.environ.get('AWS_REGION')
-        return SQSPublisher(aws_region=aws_region)
+        return SQSPublisher(**get_aws_credentials_from_env())
 
     def _load_basic_topics(self, topics_format):
         stati = 'started', 'finished', 'failed'
@@ -47,3 +46,11 @@ class ProcessStatusNotifier:
         payload = payload if payload else self.payload
         for topic in topics:
             self.notifier.publish(self.queue_name, payload, attributes={'topic': topic})
+
+
+def get_aws_credentials_from_env():
+    return {
+        'aws_secret_access_key': os.environ.get('SECRET_ACCESS_KEY') or os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        'aws_access_key_id': os.environ.get('ACCESS_KEY_ID') or os.environ.get('AWS_SECRET_KEY_ID'),
+        'aws_region': os.environ.get('REGION') or os.environ.get('AWS_REGION'),
+    }
