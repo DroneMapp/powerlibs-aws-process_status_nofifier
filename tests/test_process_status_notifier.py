@@ -1,8 +1,8 @@
-from powerlibs.aws.process_status_notifier import ProcessStatusNotifier
-
 from unittest import mock
 
 import pytest
+
+from powerlibs.aws.process_status_notifier import ProcessStatusNotifier
 
 
 @pytest.fixture
@@ -43,5 +43,12 @@ def test_failed(publish_mock, payload):
         with ProcessStatusNotifier(queue_name='q', process_name='proc-id', payload=payload):
             publish_mock.assert_called_with('q', payload, attributes={'topic': 'proc-id__started'})
             raise Exception('Something wrong is not right.')
-        assert exc_info == 'Something wrong is not right'
-        publish_mock.assert_called_with('q', {**payload, 'message': 'Something wrong is not right.'}, attributes={'topic': 'proc-id__failed'})
+    assert 'Something wrong is not right' in str(exc_info.value)
+
+    args, kwargs = publish_mock.call_args
+    assert args[0] == 'q'
+    for k, v in payload.items():
+        assert args[1][k] == v
+    assert args[1]['message'] == 'Something wrong is not right.'
+    assert 'traceback' in args[1]
+    assert kwargs == {'attributes': {'topic': 'proc-id__failed'}}
