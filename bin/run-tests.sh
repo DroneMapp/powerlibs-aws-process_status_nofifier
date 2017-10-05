@@ -8,7 +8,7 @@ pip install -U "git+file://$PWD" --no-cache-dir --process-dependency-links
 
 mv powerlibs x
 export $(cat test.env)
-PYTHONPATH=. pytest tests/ || RET=$?
+PYTHONPATH=. pytest -vvv tests/ || RET=$?
 mv x powerlibs
 
 exit $RET

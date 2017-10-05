@@ -1,8 +1,11 @@
 import os
+import traceback
 
 from cached_property import cached_property
 
-from powerlibs.aws.sqs.publisher import SQSPublisher
+from powerlibs.aws.sqs.publisher import SQSPublisher  # pylint: disable=no-name-in-module, import-error
+
+# flake8: noqa E501 pylint: disable=line-too-long
 
 
 class ProcessStatusNotifier:
@@ -33,13 +36,16 @@ class ProcessStatusNotifier:
         self.notify('started')
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type:
-            payload = dict(self.payload)
-            payload['message'] = str(exc_value)
-            self.notify('failed', payload=payload)
-        else:
-            self.notify('finished')
+    def __exit__(self, exc_type, exc_value, trc_back):
+        if exc_type is None:
+            return self.notify('finished')
+
+        payload = dict(self.payload)
+        payload['message'] = str(exc_value)
+        payload['traceback'] = ''.join(traceback.format_tb(trc_back))
+
+        self.notify('failed', payload=payload)
+        raise exc_type(exc_value)
 
     def notify(self, status, payload=None):
         topics = self.status_topics[status]
