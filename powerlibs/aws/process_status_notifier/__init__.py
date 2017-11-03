@@ -10,10 +10,11 @@ from powerlibs.aws.sqs.publisher import SQSPublisher  # pylint: disable=no-name-
 
 class ProcessStatusNotifier:
 
-    def __init__(self, queue_name, process_name, topics_format='{process_name}__{status}', payload=None):
+    def __init__(self, queue_name, process_name, topics_format='{process_name}__{status}', payload=None, extra_queues=None):
         self.process_name = process_name
         self.payload = payload if payload else dict()
         self.queue_name = queue_name
+        self.extra_queues = extra_queues or list()
         self._load_basic_topics(topics_format)
 
     @cached_property
@@ -52,6 +53,8 @@ class ProcessStatusNotifier:
         payload = payload if payload else self.payload
         for topic in topics:
             self.notifier.publish(self.queue_name, payload, attributes={'topic': topic})
+            for queue in self.extra_queues:
+                self.notifier.publish(queue, payload, attributes={'topic': topic})
 
 
 def get_aws_credentials_from_env():
