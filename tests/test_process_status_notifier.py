@@ -38,6 +38,25 @@ def test_custom_topic_name(publish_mock, payload):
 
 
 @mock.patch('powerlibs.aws.sqs.publisher.SQSPublisher.publish')
+def test_extra_topics(publish_mock, payload):
+    with ProcessStatusNotifier(
+        queue_name='q', process_name='proc-id', payload=payload, topics_format='custom_topics_format__{status}',
+        extra_queues=['xq1', 'xq2']
+    ):
+        publish_mock.assert_has_calls((
+            mock.call('q', payload, attributes={'topic': 'custom_topics_format__started'}),
+            mock.call('xq1', payload, attributes={'topic': 'custom_topics_format__started'}),
+            mock.call('xq2', payload, attributes={'topic': 'custom_topics_format__started'}),
+
+        ))
+    publish_mock.assert_has_calls((
+        mock.call('q', payload, attributes={'topic': 'custom_topics_format__finished'}),
+        mock.call('xq1', payload, attributes={'topic': 'custom_topics_format__finished'}),
+        mock.call('xq2', payload, attributes={'topic': 'custom_topics_format__finished'}),
+    ))
+
+
+@mock.patch('powerlibs.aws.sqs.publisher.SQSPublisher.publish')
 def test_failed(publish_mock, payload):
     with pytest.raises(Exception) as exc_info:
         with ProcessStatusNotifier(queue_name='q', process_name='proc-id', payload=payload):
