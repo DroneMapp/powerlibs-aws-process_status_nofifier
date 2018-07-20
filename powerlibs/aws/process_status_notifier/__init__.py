@@ -51,6 +51,10 @@ class ProcessStatusNotifier:
     def notify(self, status, payload=None):
         topics = self.status_topics[status]
         payload = payload if payload else self.payload
+
+        if status == 'started':
+            payload.pop('is_final')
+
         for topic in topics:
             self.notifier.publish(self.queue_name, payload, attributes={'topic': topic})
             for queue in self.extra_queues:
