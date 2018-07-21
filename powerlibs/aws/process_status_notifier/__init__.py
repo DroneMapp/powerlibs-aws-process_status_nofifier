@@ -17,6 +17,8 @@ class ProcessStatusNotifier:
         self.extra_queues = extra_queues or list()
         self._load_basic_topics(topics_format)
 
+        self.is_final = self.payload.get('is_final', False)
+
     @cached_property
     def notifier(self):
         return SQSPublisher(**get_aws_credentials_from_env())
@@ -53,7 +55,9 @@ class ProcessStatusNotifier:
         payload = payload if payload else self.payload
 
         if status == 'started':
-            payload.pop('is_final')
+            payload['is_final'] = False
+        else:
+            payload['is_final'] = self.is_final
 
         for topic in topics:
             self.notifier.publish(self.queue_name, payload, attributes={'topic': topic})
